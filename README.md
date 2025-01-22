@@ -41,6 +41,8 @@ REDIS_PORT=6379
 SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+SENDER_EMAIL=your email
+EMAIL_PASSWORD=your password
 ```
 
 ### Build and Start Services
@@ -75,7 +77,7 @@ Open [http://localhost:9000/docs](http://localhost:9000/docs) to explore and int
 │   ├── routes
 │   ├── schemas
 │   ├── utils
-│   └── celery_app.py
+│   └── tasks
 ├── alembic/
 ├── database/
 ├── docker-compose.yml

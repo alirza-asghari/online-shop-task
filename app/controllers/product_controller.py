@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.products import Product
 from app.schemas.product_schema import ProductCreate, ProductUpdate, ProductsDetail
+from app.utils.redis_utils import get_cache, set_cache
 from typing import Optional
+import json
 
 class ProductController:
     """
@@ -121,7 +123,7 @@ class ProductController:
         to_price: Optional[int] = None
     )-> list[ProductsDetail]:
         """
-        Retrieves all products from the database.
+        Retrieves all products from the database or redis(cache).
 
         Args:
             db (Session): Database session.
@@ -132,20 +134,36 @@ class ProductController:
         Raises:
             HTTPException: If there's an error retrieving products.
         """
+        cache_key = f"products:{limit}:{from_price}:{to_price}"
+
+        # 2) Attempt to get data from Redis
+        cached_data = get_cache(cache_key)
+        if cached_data:
+            # If we have something in Redis, parse the JSON-serialized list
+            try:
+                return [ProductsDetail(**prod) for prod in json.loads(cached_data)]
+            except Exception as e:
+                # If JSON parse fails for some reason, we can log or ignore and fall back
+                pass
+
+        # 3) If not cached, query the DB
         try:
-            products = db.query(Product).limit(limit)
-            if from_price and to_price:
-                products = products.where(
-                    (Product.price >= from_price) &
-                    (Product.price <= to_price)) 
-            product_list = []
-            for product in products:
-                product_out = ProductsDetail(
-                    id=int(product.id),
-                    name=str(product.name),
-                    price=int(product.price)
-                )
-                product_list.append(product_out)
+            query = db.query(Product).limit(limit)
+
+            if from_price is not None and to_price is not None:
+                query = query.filter(Product.price >= from_price, Product.price <= to_price)
+
+            products = query.all()
+
+            # 4) Convert to the schema
+            product_list = [
+                ProductsDetail(id=int(p.id), name=str(p.name), price=int(p.price))
+                for p in products
+            ]
+
+            # 5) Store in cache (e.g., for 2 minutes = 120 seconds)
+            set_cache(cache_key, json.dumps([prod.model_dump() for prod in product_list]), expire=120)
+
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

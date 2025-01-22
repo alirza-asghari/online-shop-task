@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is an online shop API built using FastAPI. It supports user registration with email verification, product management, shopping cart functionality, order history, and a simulated payment process. The application uses FastAPI for web framework, PostgreSQL for database, Celery with Redis for asynchronous tasks, and Alembic for database migrations.
+This project is an online shop API built using FastAPI. It supports user registration with email verification, product management, shopping cart functionality, order history, and a simulated payment process. The application uses FastAPI for web framework, PostgreSQL for database, Celery with Redis for asynchronous tasks, Alembic for database migrations and Redis for caching.
 
 ## Features
 
@@ -12,11 +12,8 @@ This project is an online shop API built using FastAPI. It supports user registr
 - JWT-based authentication
 - Asynchronous email sending via Celery and Redis
 - Database migrations using Alembic
+- Caching using Redis
 
-## Prerequisites
-
-- Docker and Docker Compose
-- Git
 
 ## Getting Started
 
@@ -121,3 +118,6 @@ Open [http://localhost:9000/docs](http://localhost:9000/docs) to explore and int
 - **Database Issues**: Check `.env` for PostgreSQL configuration.
 - **Email Issues**: Verify SMTP settings in `task.email.py`.
 
+## License
+
+This project is licensed under the my made up coffee License.

@@ -2,9 +2,12 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.products import Product
 from app.schemas.product_schema import ProductCreate, ProductUpdate, ProductsDetail
-from app.config import config
+from typing import Optional
 
 class ProductController:
+    """
+    Controller class for managing products based on product model.
+    """
     @staticmethod
     def create_product(db: Session, product: ProductCreate) -> dict[str, str]:
         """
@@ -112,7 +115,11 @@ class ProductController:
         return {"detail": f"Product {product_id} deleted"}
 
     @staticmethod
-    def get_products(db: Session) -> list[ProductsDetail]:
+    def get_products(db: Session,
+        limit: Optional[int] = 10,
+        from_price: Optional[int] = None,
+        to_price: Optional[int] = None
+    )-> list[ProductsDetail]:
         """
         Retrieves all products from the database.
 
@@ -126,7 +133,11 @@ class ProductController:
             HTTPException: If there's an error retrieving products.
         """
         try:
-            products = db.query(Product).all()
+            products = db.query(Product).limit(limit)
+            if from_price and to_price:
+                products = products.where(
+                    (Product.price >= from_price) &
+                    (Product.price <= to_price)) 
             product_list = []
             for product in products:
                 product_out = ProductsDetail(

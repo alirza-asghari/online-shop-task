@@ -4,10 +4,11 @@ services:
     container_name: online-shop-teclads
     ports:
       - "9000:9000"
-    env_file: 
+    env_file:
       - .env
     depends_on:
       - db
+      - redis
     volumes:
       - .:/app
     networks:
@@ -25,6 +26,27 @@ services:
     networks:
       - shop-network
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - shop-network
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    container_name: celery-worker
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - .:/app
+    networks:
+      - shop-network
+    command: celery -A app.tasks.email.celery worker --loglevel=info
 
 networks:
   shop-network:

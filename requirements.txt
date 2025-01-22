@@ -4,7 +4,10 @@ sqlalchemy
 pydantic
 pydantic_settings
 pydantic[email]
-passlib
+passlib==1.7.4
 psycopg2-binary
 python-jose[cryptography]
-bcrypt
+bcrypt==3.2.2
+celery
+redis
+alembic

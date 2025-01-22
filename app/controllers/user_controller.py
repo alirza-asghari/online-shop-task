@@ -4,6 +4,7 @@ from app.models.users import User
 from app.utils.password_utils import hash_password, verify_password
 from app.utils.jwt_utils import create_access_token
 from app.schemas.user_schema import UserCreate, UserOut, UserLogin
+from app.tasks.email import send_verification_email
 from app.config import config
 from datetime import timedelta
 
@@ -28,7 +29,7 @@ class UserController:
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already exists."
+                detail="User already exists."
             )
 
         hashed_pw = hash_password(user.password)
@@ -48,7 +49,9 @@ class UserController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error creating user: {str(e)}"
             )
-
+        
+        send_verification_email.delay(new_user.email)
+        
         return UserOut(
             id=int(new_user.id),
             username=str(new_user.username)

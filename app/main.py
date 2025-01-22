@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from app.routes.user_endpoints import UserEndpoint
 from app.routes.product_endpoint import ProductEndpoint
+from app.routes.order_endpoint import CartEndpoint
 
 app = FastAPI(
     title="Online shop task API",
@@ -11,6 +12,7 @@ app = FastAPI(
 
 app.include_router(UserEndpoint())
 app.include_router(ProductEndpoint())
+app.include_router(CartEndpoint())
 
 
 def custom_openapi():

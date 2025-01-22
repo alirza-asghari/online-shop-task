@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.schemas.product_schema import ProductCreate, ProductUpdate, ProductsDetail
 from app.controllers.product_controller import ProductController
 from database.database_connection import get_db_session
 from app.utils.dependency_utils import get_current_user
+from typing import Optional
 from app.config import config
 
 class ProductEndpoint(APIRouter):
@@ -15,7 +16,7 @@ class ProductEndpoint(APIRouter):
         self.add_api_route("/create/", self.create_product, methods=["POST"], response_model=dict[str, str], dependencies=[Depends(get_current_user)])
         self.add_api_route("/update/{product_id}/", self.update_product, methods=["PUT"], response_model=dict[str, str], dependencies=[Depends(get_current_user)])
         self.add_api_route("/delete/{product_id}/", self.delete_product, methods=["DELETE"], response_model=dict[str, str], dependencies=[Depends(get_current_user)])
-        self.add_api_route("/all/", self.get_all_products, methods=["GET"], response_model=list[ProductsDetail], dependencies=[Depends(get_current_user)])
+        self.add_api_route("/get/", self.get_products, methods=["GET"], response_model=list[ProductsDetail], dependencies=[Depends(get_current_user)])
 
     def create_product(self, product_in: ProductCreate, db: Session = Depends(get_db_session)) -> dict[str, str]:
         """
@@ -59,7 +60,13 @@ class ProductEndpoint(APIRouter):
         return ProductController.delete_product(db, product_id)
 
 
-    def get_all_products(self, db: Session = Depends(get_db_session)) -> list[ProductsDetail]:
+    def get_products(
+            self,
+            limit: Optional[int] = Query(None, description="limit for retrieve data"), 
+            from_price: Optional[int] = Query(None, description="Start point of price"), 
+            to_price: Optional[int] = Query(None, description="End point of price"), 
+            db: Session = Depends(get_db_session)
+        ) -> list[ProductsDetail]:
         """
         Retrieves all products.
 
@@ -70,4 +77,4 @@ class ProductEndpoint(APIRouter):
             list[ProductOut]: List of products.
         """
 
-        return ProductController.get_products(db)
+        return ProductController.get_products(db, limit, from_price, to_price)

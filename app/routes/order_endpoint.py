@@ -43,6 +43,14 @@ class CartEndpoint(APIRouter):
             response_model=dict[str, str], 
             dependencies=[Depends(get_current_user)]
         )
+        # Route to history of orders
+        self.add_api_route(
+        "/history/", 
+        self.order_history, 
+        methods=["GET"], 
+        response_model=list[OrderOut], 
+        dependencies=[Depends(get_current_user)]
+        )
 
     def add_to_cart(
         self, 
@@ -87,3 +95,13 @@ class CartEndpoint(APIRouter):
         Processes checkout for all items in the cart.
         """
         return OrderController.checkout(db, current_user.id, checkout_data)
+
+    def order_history(
+        self,
+        db: Session = Depends(get_db_session), 
+        current_user = Depends(get_current_user)
+    ) -> list[OrderOut]:
+        """
+        Retrieves the authenticated user's past orders.
+        """
+        return OrderController.get_order_history(db, current_user.id)

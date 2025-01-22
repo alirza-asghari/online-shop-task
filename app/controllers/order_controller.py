@@ -126,8 +126,8 @@ class OrderController:
                 # If you want to store total_price, do so here:
                 # e.g., item.total_price = item.quantity * item.product.price
                 item.total_price = item.quantity * item.product.price
-                total_cost += item.total_price
-                item.status = "paid"
+                total_cost += int(item.total_price)
+                setattr(item, 'status', 'paid')
             
             db.commit()
             # Here you would call your payment service with `total_cost` and `checkout_data.payment_method`
@@ -137,4 +137,21 @@ class OrderController:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e)
+            )
+
+    @staticmethod
+    def get_order_history(db: Session, user_id: int) -> list[OrderOut]:
+        """
+        Retrieve all past orders (with status 'paid') for a user.
+        """
+        try:
+            history_orders = db.query(Order).filter(
+                Order.user_id == user_id,
+                Order.status == "paid"
+            ).all()
+            return [OrderOut.model_validate(o) for o in history_orders]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error fetching order history: {str(e)}"
             )
